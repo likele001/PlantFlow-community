@@ -18,13 +18,13 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   const pw = String(password ?? '')
   const inviteTok = String(inviteToken ?? '').trim()
 
-  // 无邀请码时必须提供公司名（注册即创建独立团队）
-  if (!name && !inviteTok) {
-    res.status(400).json({ success: false, error: '公司名 / 邮箱 / 密码 均为必填（或使用团队邀请码注册）' })
+  // 开源版：仅允许通过企业邀请链接注册为员工，禁止自助注册企业
+  if (!inviteTok) {
+    res.status(403).json({ success: false, error: '本系统不开放自助注册，请联系管理员获取邀请链接' })
     return
   }
   if (!e || !pw) {
-    res.status(400).json({ success: false, error: '公司名 / 邮箱 / 密码 均为必填' })
+    res.status(400).json({ success: false, error: '邮箱 / 密码 均为必填' })
     return
   }
   if (pw.length < 6) {
@@ -79,11 +79,6 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
         })
         return
       }
-    } else {
-      // 常规注册：创建独立团队（租户），注册者为租户管理员
-      const created = await db.createTenant(name)
-      await db.createMembership({ tenantId: created.id, userId: user.id, role: 'tenant_admin' })
-      tenant = { id: created.id, name: created.name }
     }
 
     const sessionToken = crypto.randomBytes(24).toString('hex')

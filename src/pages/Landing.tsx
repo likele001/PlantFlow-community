@@ -94,7 +94,7 @@ export default function Landing() {
             <a href="#faq" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">FAQ</a>
             <Link to="/docs" className="text-sm text-gray-600 hover:text-gray-900 hidden md:inline">文档</Link>
             <Link to="/login" className="text-sm font-medium text-violet-600 hover:text-violet-700">登录</Link>
-            <Link to="/login" className="text-sm font-medium bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition">免费试用</Link>
+            <Link to="/login" className="text-sm font-medium bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition">登录体验</Link>
           </div>
         </div>
       </nav>
@@ -312,7 +312,7 @@ export default function Landing() {
           <p className="text-gray-500 mb-8 max-w-lg mx-auto">MIT 开源，免费使用。Docker 一键部署，数据完全自主可控。商业版提供多租户与计费系统，可联系获取。</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/login" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-violet-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-violet-700 transition shadow-lg shadow-violet-200">
-              立即注册 <ArrowRight className="w-4 h-4" />
+              立即登录 <ArrowRight className="w-4 h-4" />
             </Link>
             <a href="https://github.com/likele001/PlantFlow" rel="noopener" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-3 rounded-xl font-medium border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition">
               查看源码

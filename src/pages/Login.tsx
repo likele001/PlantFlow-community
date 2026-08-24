@@ -11,8 +11,8 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>(() => (searchParams.get('invite') ? 'register' : 'login'))
   const [email, setEmail] = useState('admin@example.com')
   const [password, setPassword] = useState('admin123')
-  const [companyName, setCompanyName] = useState('')
   const [inviteToken, setInviteToken] = useState(() => searchParams.get('invite') ?? '')
+  const hasInvite = searchParams.get('invite') ? true : false
   const [localError, setLocalError] = useState<string | null>(null)
 
   // 登录/注册成功后回跳的来源路径（如 ?redirect=/docs），仅允许站内路径
@@ -37,7 +37,7 @@ export default function Login() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyName, email, password, inviteToken: inviteToken.trim() || undefined }),
+        body: JSON.stringify({ email, password, inviteToken: inviteToken.trim() }),
       })
       const data = await res.json()
       if (!data.success) {
@@ -77,10 +77,12 @@ export default function Login() {
                   onClick={() => { setMode('login'); setLocalError(null) }}
                   className={cn('flex-1 pb-3 text-sm font-semibold border-b-2 transition', mode === 'login' ? 'border-zinc-100 text-zinc-100' : 'border-transparent text-zinc-500')}
                 >登录</button>
-                <button
-                  onClick={() => { setMode('register'); setLocalError(null) }}
-                  className={cn('flex-1 pb-3 text-sm font-semibold border-b-2 transition', mode === 'register' ? 'border-zinc-100 text-zinc-100' : 'border-transparent text-zinc-500')}
-                >注册</button>
+                {hasInvite ? (
+                  <button
+                    onClick={() => { setMode('register'); setLocalError(null) }}
+                    className={cn('flex-1 pb-3 text-sm font-semibold border-b-2 transition', mode === 'register' ? 'border-zinc-100 text-zinc-100' : 'border-transparent text-zinc-500')}
+                  >接受邀请注册</button>
+                ) : null}
               </div>
 
               {mode === 'login' ? (
@@ -101,13 +103,12 @@ export default function Login() {
                     <div className="font-semibold text-zinc-200">演示账号</div>
                     <div className="mt-1">admin@example.com / admin123</div>
                   </div>
+                  <div className="text-center text-xs text-zinc-500">
+                    没有账号？请联系企业管理员获取<strong className="text-zinc-300">邀请链接</strong>后注册
+                  </div>
                 </form>
               ) : (
                 <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void handleRegister() }}>
-                  <label className="block">
-                    <div className="mb-1 text-xs text-zinc-400">公司名称（团队邀请注册可留空）</div>
-                    <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none" placeholder="XX科技有限公司" />
-                  </label>
                   <label className="block">
                     <div className="mb-1 text-xs text-zinc-400">邮箱</div>
                     <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none" placeholder="you@company.com" autoComplete="email" />
@@ -117,8 +118,8 @@ export default function Login() {
                     <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none" placeholder="至少6位密码" autoComplete="new-password" />
                   </label>
                   <label className="block">
-                    <div className="mb-1 text-xs text-zinc-400">团队邀请码（可选）</div>
-                    <input value={inviteToken} onChange={(e) => setInviteToken(e.target.value)} className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none" placeholder="粘贴管理员发给你的邀请链接或邀请码" />
+                    <div className="mb-1 text-xs text-zinc-400">邀请码（必填）</div>
+                    <input value={inviteToken} onChange={(e) => setInviteToken(e.target.value)} className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none" placeholder="粘贴管理员发给你的邀请链接" />
                   </label>
                   {showError ? <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">{showError}</div> : null}
                   <button type="submit" className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-violet-500 text-sm font-semibold text-white hover:bg-violet-400 transition">
@@ -126,7 +127,7 @@ export default function Login() {
                   </button>
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-xs text-zinc-400">
                     <ShieldCheck className="inline h-3.5 w-3.5 mr-1 text-emerald-400" />
-                    填邀请码注册 → 加入管理员团队；不填 → 创建独立团队，数据完全隔离。
+                    通过管理员邀请链接注册，将加入该企业团队。
                   </div>
                 </form>
               )}
