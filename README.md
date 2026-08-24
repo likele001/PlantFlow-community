@@ -1,11 +1,12 @@
-# PlantFlow
+# PlantFlow（厂流）社区版
 
 **PlantFlow**（厂流）— 可视化工作流编排 + AI 知识库 + 对话应用，面向工厂/企业内部自动化。可理解为 **n8n（流程）+ Dify（AI 应用）** 的开源实现。
 
 > 本仓库为 **PlantFlow 开源版（Community Edition）**：单租户、MIT 协议、免费自部署。
-> 商业版（多租户 + 计费钱包 + 套餐订阅 + 平台运营管理）为闭源授权，可联系 contact@cenkor.cn 获取。
+> 适合个人/企业内部自用；如需 **多租户、计费钱包、套餐订阅、平台运营管理**（商业版），请联系 contact@cenkor.cn。
 
-[![License: Commercial](https://img.shields.io/badge/License-Commercial-orange.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose.yml)
 
 ## 功能
 
@@ -15,7 +16,7 @@
 - **知识库**：文件上传 / 粘贴导入、关键词与向量检索
 - **对话应用**：OpenAI 兼容 API、网页聊天嵌入
 - **渠道**：企业微信、飞书消息推送与回调
-- **运维**：执行中心、会话 Inbox、多租户、审计日志
+- **运维**：执行中心、会话 Inbox、可观测性、失败告警、定时任务、审计日志
 
 ## 技术栈
 
@@ -38,8 +39,8 @@
 ### 1. 克隆与配置
 
 ```bash
-git clone <你的仓库地址>
-cd api   # 或仓库根目录名
+git clone https://github.com/likele001/PlantFlow-community.git
+cd PlantFlow-community
 cp .env.example .env
 ```
 
@@ -196,9 +197,21 @@ docker-compose.yml
 Dockerfile
 ```
 
-## 开源与许可
+## 开源版 vs 商业版
 
-本项目采用[商业授权协议](LICENSE)：购买源码后可用于自有部署、客户交付与二次开发，**禁止转售/开源源码本身**。需要授权或技术支持请联系 contact@cenkor.cn。
+| 能力 | 开源版（本仓库） | 商业版 |
+|------|-----------------|--------|
+| 协议 | MIT（免费） | 商业授权 |
+| 租户模型 | 单租户 | 多租户 |
+| 计费钱包 / 套餐订阅 | ❌ | ✅（虎皮椒 / 微信 / 支付宝） |
+| 平台运营管理 | ❌ | ✅（租户管理、账单流水） |
+| 获取方式 | 直接 clone | 付费授权（私有交付 + 12 个月更新支持） |
+
+需要商业版（多租户 + 计费系统 + 平台运营）请联系：contact@cenkor.cn
+
+## License
+
+本项目采用 **MIT License**，可自由使用、修改、商用，保留版权声明即可。
 
 ## 安全提示
 
