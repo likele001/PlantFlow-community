@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlantFlow 管理部署手册</title>
+  <meta name="description" content="PlantFlow（厂流）管理后台与部署运维手册：环境配置、宝塔/原生/Docker 部署、系统管理、备份恢复、排错指南。">
+  <style>
+    :root {
+      --accent: #7c3aed;
+      --accent-light: #ede9fe;
+      --ink-900: #0f172a;
+      --ink-700: #334155;
+      --ink-500: #64748b;
+      --ink-400: #94a3b8;
+      --ink-50: #f8fafc;
+      --border: #e2e8f0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink-700); background: #fff; line-height: 1.7; }
+    .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: var(--ink-50); border-right: 1px solid var(--border); overflow-y: auto; padding: 1.5rem 0; z-index: 10; }
+    .sidebar h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-400); padding: 0 1.25rem; margin-bottom: .75rem; }
+    .sidebar a { display: block; padding: .35rem 1.25rem; font-size: .875rem; color: var(--ink-700); text-decoration: none; transition: .15s; }
+    .sidebar a:hover, .sidebar a.active { color: var(--accent); background: var(--accent-light); }
+    .sidebar a.section { font-weight: 600; margin-top: .75rem; }
+    .content { margin-left: 260px; max-width: 860px; padding: 2.5rem 3rem 4rem; }
+    h1 { font-size: 2rem; font-weight: 700; color: var(--ink-900); margin-bottom: .5rem; }
+    h2 { font-size: 1.4rem; font-weight: 600; color: var(--ink-900); margin: 2.5rem 0 .75rem; padding-bottom: .5rem; border-bottom: 2px solid var(--accent); }
+    h3 { font-size: 1.1rem; font-weight: 600; color: var(--ink-900); margin: 1.5rem 0 .5rem; }
+    h4 { font-size: 1rem; font-weight: 600; color: var(--ink-700); margin: 1rem 0 .4rem; }
+    p, li { margin-bottom: .5rem; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    code { background: var(--ink-50); padding: .15em .4em; border-radius: 4px; font-size: .875em; color: var(--accent); }
+    pre { background: #1e293b; color: #e2e8f0; padding: 1rem 1.25rem; border-radius: 8px; overflow-x: auto; font-size: .85rem; line-height: 1.5; margin: .75rem 0 1.25rem; }
+    pre code { background: none; color: inherit; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: .75rem 0 1.25rem; font-size: .875rem; }
+    th, td { padding: .5rem .75rem; border: 1px solid var(--border); text-align: left; }
+    th { background: var(--ink-50); font-weight: 600; color: var(--ink-900); }
+    .note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin: .75rem 0; font-size: .875rem; }
+    .tip { background: #dbeafe; border-left: 4px solid #3b82f6; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin: .75rem 0; font-size: .875rem; }
+    .warn { background: #fee2e2; border-left: 4px solid #ef4444; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin: .75rem 0; font-size: .875rem; }
+    @media (max-width: 768px) {
+      .sidebar { position: static; width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 12rem; }
+      .content { margin-left: 0; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div style="padding:0 1.25rem 1rem;border-bottom:1px solid var(--border);margin-bottom:.75rem">
+    <strong style="font-size:1.1rem;color:var(--ink-900)">PlantFlow</strong>
+    <div style="font-size:.8rem;color:var(--ink-400)">管理部署手册</div>
+  </div>
+  <h2>目录</h2>
+  <a href="#env" class="section">1 环境要求</a>
+  <a href="#baota">2 宝塔部署</a>
+  <a href="#native">3 原生部署</a>
+  <a href="#docker">4 Docker 部署</a>
+  <a href="#config">5 配置说明</a>
+  <a href="#system">6 系统管理</a>
+  <a href="#backup">7 备份与恢复</a>
+  <a href="#monitor">8 监控与日志</a>
+  <a href="#upgrade">9 升级指南</a>
+  <a href="#troubleshoot">10 排错指南</a>
+  <a href="#tools">11 运维工具</a>
+</nav>
+
+<main class="content">
+
+<h1>PlantFlow 管理部署手册</h1>
+<p class="meta" style="color:var(--ink-400);margin-bottom:1.5rem">版本 1.0 &middot; 适用于 PlantFlow v1.0 / api.cloud.cenkor.cn</p>
+
+<section id="env">
+<h2>1 环境要求</h2>
+
+<h3>服务器最低配置</h3>
+<table>
+  <tr><th>环境</th><th>CPU</th><th>内存</th><th>磁盘</th><th>带宽</th></tr>
+  <tr><td>演示/轻量</td><td>1 核</td><td>2 GB</td><td>20 GB</td><td>5 Mbps</td></tr>
+  <tr><td>生产（建议）</td><td>2 核</td><td>4 GB</td><td>50 GB SSD</td><td>10 Mbps</td></tr>
+  <tr><td>高并发</td><td>4 核+</td><td>8 GB+</td><td>100 GB SSD</td><td>20 Mbps+</td></tr>
+</table>
+
+<h3>软件依赖</h3>
+<table>
+  <tr><th>组件</th><th>版本要求</th><th>说明</th></tr>
+  <tr><td>Node.js</td><td>≥ 22</td><td>运行环境</td></tr>
+  <tr><td>PostgreSQL</td><td>≥ 14（推荐 16）</td><td>主数据库</td></tr>
+  <tr><td>Redis</td><td>≥ 6</td><td>队列、缓存、限流</td></tr>
+  <tr><td>Nginx</td><td>≥ 1.20</td><td>反向代理（生产环境）</td></tr>
+  <tr><td>Docker（可选）</td><td>≥ 24</td><td>容器化部署</td></tr>
+</table>
+
+<p>可选依赖：<code>pgvector</code> 扩展（用于知识库向量检索，需 PostgreSQL 16 +）。</p>
+</section>
+
+<section id="baota">
+<h2>2 宝塔部署</h2>
+
+<h3>方案 A：纯反向代理（推荐）</h3>
+<p>后端 Express 已同时托管 API 和编译后的前端，最简方案是将域名全部反代到 <code>127.0.0.1:5000</code>。</p>
+
+<h4>步骤</h4>
+<ol>
+  <li>宝塔面板 → 软件商店 → 安装 <strong>Node.js 版本管理器</strong>，安装 Node.js ≥ 22</li>
+  <li>安装 <strong>PostgreSQL</strong>（≥ 14）和 <strong>Redis</strong>（≥ 6）</li>
+  <li>创建数据库和用户</li>
+</ol>
+<pre>sudo -u postgres psql
+CREATE USER api WITH PASSWORD 'your_strong_password';
+CREATE DATABASE api OWNER api;
+\q</pre>
+
+<ol start="4">
+  <li>上传项目代码到服务器（如 <code>/www/wwwroot/api/</code>）</li>
+  <li>配置环境变量</li>
+</ol>
+<pre>cp /www/wwwroot/api/.env.example /www/wwwroot/api/.env
+# 编辑 .env：
+# DATABASE_URL=postgresql://api:your_strong_password@127.0.0.1:5432/api
+# REDIS_URL=redis://:密码@127.0.0.1:6379
+# LLM_MASTER_KEY=$(openssl rand -hex 32)</pre>
+
+<ol start="6">
+  <li>安装依赖并构建</li>
+</ol>
+<pre>cd /www/wwwroot/api
+npm install --omit=dev
+npm run build</pre>
+
+<ol start="7">
+  <li>启动服务（使用 PM2 管理进程）</li>
+</ol>
+<pre>npm install -g pm2
+pm2 start dist-api/server.js --name plantflow
+pm2 save
+pm2 startup</pre>
+
+<ol start="8">
+  <li>宝塔面板 → 网站 → 添加站点 → 域名设为你的域名（如 <code>api.cloud.cenkor.cn</code>）</li>
+  <li>设置 → 配置文件 → 替换为以下内容：</li>
+</ol>
+<pre>server {
+    listen 80;
+    server_name api.cloud.cenkor.cn;
+
+    # SSL 配置由宝塔自动管理，保留 listen 443 ssl 等相关配置即可
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+    }
+
+    # WebSocket 支持（SSE 流式对话需要）
+    location /api/v1/chat/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_set_header Host              $host;
+        proxy_read_timeout 86400s;
+    }
+}</pre>
+
+<ol start="10">
+  <li>在宝塔 SSL 面板申请并部署 SSL 证书</li>
+  <li>访问域名验证部署状态</li>
+</ol>
+<pre>curl -s https://你的域名/api/health</pre>
+<p>返回 <code>{"ok":true</code> 即部署成功。</p>
+
+<h3>方案 B：网站根目录 + API 反代</h3>
+<p>将 Nginx 直接托管前端静态文件，仅 API 请求反代到后端。</p>
+<div class="note">此方案需先将构建产物 <code>dist/</code> 复制到网站根目录，并在 Nginx 中配置 SPA fallback（<code>try_files $uri $uri/ /index.html</code>）。</div>
+</section>
+
+<section id="native">
+<h2>3 原生部署</h2>
+<p>不依赖宝塔面板，直接在 Linux 服务器上部署。</p>
+
+<h3>步骤</h3>
+<ol>
+  <li>安装依赖</li>
+</ol>
+<pre># Ubuntu/Debian
+apt update && apt install -y curl gnupg
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt install -y nodejs postgresql postgresql-contrib redis-server nginx
+
+# 确认版本
+node -v   # 需 ≥ 22
+psql --version  # 需 ≥ 14
+redis-server -v # 需 ≥ 6</pre>
+
+<ol start="2">
+  <li>配置 PostgreSQL</li>
+</ol>
+<pre>sudo -u postgres psql
+CREATE USER api WITH PASSWORD 'your_strong_password';
+CREATE DATABASE api OWNER api;
+\q</pre>
+
+<ol start="3">
+  <li>可选：安装 pgvector（向量检索）</li>
+</ol>
+<pre>apt install -y postgresql-16-pgvector
+# 或从源码编译
+# git clone https://github.com/pgvector/pgvector.git && cd pgvector && make && make install
+# 然后在数据库中执行: CREATE EXTENSION vector;</pre>
+
+<ol start="4">
+  <li>配置 Redis</li>
+</ol>
+<pre># 编辑 /etc/redis/redis.conf
+# requirepass 你的redis密码
+systemctl restart redis
+systemctl enable redis</pre>
+
+<ol start="5">
+  <li>部署项目</li>
+</ol>
+<pre>mkdir -p /var/www/plantflow
+# 上传项目文件到 /var/www/plantflow/
+cd /var/www/plantflow
+cp .env.example .env
+# 编辑 .env 填入正确的数据库/Redis/LLM_MASTER_KEY
+
+npm install --omit=dev
+npm run build</pre>
+
+<ol start="6">
+  <li>使用 PM2 管理进程</li>
+</ol>
+<pre>npm install -g pm2
+NODE_ENV=production pm2 start dist-api/server.js --name plantflow -i max
+pm2 save
+pm2 startup  # 按提示执行生成的命令</pre>
+
+<ol start="7">
+  <li>配置 Nginx 反向代理</li>
+</ol>
+<pre>cat > /etc/nginx/sites-available/plantflow << 'NGINX'
+server {
+    listen 80;
+    server_name api.cloud.cenkor.cn;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.cloud.cenkor.cn;
+
+    ssl_certificate     /etc/nginx/ssl/你的证书.crt;
+    ssl_certificate_key /etc/nginx/ssl/你的证书.key;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    location /api/v1/chat/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_read_timeout 86400s;
+    }
+}
+NGINX
+
+ln -sf /etc/nginx/sites-available/plantflow /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx</pre>
+
+<ol start="8">
+  <li>配置防火墙</li>
+</ol>
+<pre>ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable</pre>
+
+<ol start="9">
+  <li>验证</li>
+</ol>
+<pre>curl -s https://你的域名/api/health</pre>
+
+<h3>systemd 方式（替代 PM2）</h3>
+<pre>cat > /etc/systemd/system/plantflow.service << 'UNIT'
+[Unit]
+Description=PlantFlow Workflow Platform
+After=network.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/plantflow
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node dist-api/server.js
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now plantflow
+systemctl status plantflow</pre>
+</section>
+
+<section id="docker">
+<h2>4 Docker 部署</h2>
+
+<h3>架构说明</h3>
+<p>推荐将 PlantFlow 和 PostgreSQL、Redis 都用 Docker 管理。当前 <code>docker-compose.yml</code> 使用 <code>network_mode: host</code>，适合已有外部数据库和 Redis 的场景。</p>
+
+<h3>方案 A：使用现有 PostgreSQL + Redis（host 模式）</h3>
+<pre># docker-compose.yml（已存在于项目根目录）
+version: "3"
+services:
+  api:
+    build: .
+    image: workflow-api:latest
+    container_name: workflow-api
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./dist-api:/app/dist-api
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-5000}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL in .env}
+      LLM_MASTER_KEY: ${LLM_MASTER_KEY:?Set LLM_MASTER_KEY in .env}</pre>
+
+<pre># 部署命令
+docker compose build --no-cache
+docker compose up -d
+docker compose logs -f  # 查看启动日志</pre>
+
+<div class="warn">使用 host 网络模式时，DATABASE_URL 和 REDIS_URL 中的主机地址应使用 <code>127.0.0.1</code>。</div>
+
+<h3>方案 B：全栈 Docker（推荐生产）</h3>
+<p>包含 PostgreSQL 和 Redis 的完整 compose 文件：</p>
+<pre>version: "3"
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: plantflow-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: api
+      POSTGRES_USER: api
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api"]
+      interval: 10s
+      timeout: 5s
+
+  redis:
+    image: redis:7-alpine
+    container_name: plantflow-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+
+  api:
+    build: .
+    image: workflow-api:latest
+    container_name: plantflow-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://api:${DB_PASSWORD}@postgres:5432/api
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+
+volumes:
+  pgdata:
+  redisdata:</pre>
+
+<h4>全栈部署命令</h4>
+<pre># 准备环境变量
+cat > .env << 'EOF'
+DB_PASSWORD=your_db_password
+REDIS_PASSWORD=your_redis_password
+LLM_MASTER_KEY=$(openssl rand -hex 32)
+EOF
+
+# 构建并启动
+docker compose -f docker-compose.full.yml up -d --build
+
+# 验证
+curl -s http://127.0.0.1:5000/api/health</pre>
+
+<h3>Docker 部署维护</h3>
+<table>
+  <tr><th>操作</th><th>命令</th></tr>
+  <tr><td>查看日志</td><td><code>docker compose logs -f api</code></td></tr>
+  <tr><td>重启服务</td><td><code>docker compose restart api</code></td></tr>
+  <tr><td>更新镜像</td><td><code>docker compose build api && docker compose up -d api</code></td></tr>
+  <tr><td>停止服务</td><td><code>docker compose down</code></td></tr>
+  <tr><td>查看资源</td><td><code>docker stats</code></td></tr>
+</table>
+</section>
+
+<section id="config">
+<h2>5 配置说明</h2>
+
+<h3>核心环境变量</h3>
+<table>
+  <tr><th>变量</th><th>必填</th><th>默认值</th><th>说明</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td>是</td><td>-</td><td>PostgreSQL 连接串，格式：<code>postgresql://user:password@host:port/db</code></td></tr>
+  <tr><td><code>REDIS_URL</code></td><td>是</td><td>-</td><td>Redis 连接串，格式：<code>redis://:password@host:port</code></td></tr>
+  <tr><td><code>LLM_MASTER_KEY</code></td><td>是</td><td>-</td><td>32 字节十六进制密钥，用于加密 LLM API Key。生成：<code>openssl rand -hex 32</code></td></tr>
+  <tr><td><code>PORT</code></td><td>否</td><td>5000</td><td>服务监听端口</td></tr>
+  <tr><td><code>WORKER_CONCURRENCY</code></td><td>否</td><td>4</td><td>工作流执行并发数（最大 32）</td></tr>
+  <tr><td><code>NODE_ENV</code></td><td>否</td><td>production</td><td>运行模式</td></tr>
+</table>
+
+<h3>数据库配置建议</h3>
+<ul>
+  <li>生产环境使用强密码（至少 16 位，含大小写字母 + 数字 + 符号）</li>
+  <li>PostgreSQL 建议配置 <code>max_connections = 200</code></li>
+  <li>如需向量检索（知识库 RAG），安装 pgvector 扩展</li>
+  <li>定期执行 <code>VACUUM ANALYZE</code> 保持查询性能</li>
+</ul>
+
+<h3>Redis 配置建议</h3>
+<ul>
+  <li>生产环境必须设置密码</li>
+  <li>建议配置 <code>maxmemory 1gb</code> 和 <code>maxmemory-policy allkeys-lru</code></li>
+  <li>建议开启 <code>lazyfree-lazy-eviction yes</code> 避免大 key 阻塞</li>
+</ul>
+</section>
+
+<section id="system">
+<h2>6 系统管理</h2>
+
+<h3>管理员功能</h3>
+<p>左侧导航 → <strong>系统管理</strong>，需要 <code>tenant_admin</code> 或 <code>platform_admin</code> 角色。</p>
+
+<h4>成员管理</h4>
+<table>
+  <tr><th>角色</th><th>权限说明</th></tr>
+  <tr><td>platform_admin</td><td>平台超级管理员，可管理所有租户</td></tr>
+  <tr><td>tenant_admin</td><td>租户管理员，管理本租户成员和工作流</td></tr>
+  <tr><td>developer</td><td>开发者，可创建和编辑工作流</td></tr>
+  <tr><td>operator</td><td>运营人员，查看执行和会话中心</td></tr>
+  <tr><td>agent</td><td>客服人员，查看和回复会话</td></tr>
+</table>
+
+<p>添加成员：点击「添加成员」→ 输入邮箱、密码、选择角色 → 确定。</p>
+
+<h4>审计日志</h4>
+<p>记录所有关键操作：工作流发布、成员变更、配置修改等。支持按时间和操作类型筛选。</p>
+
+<h3>多租户管理</h3>
+<p><code>platform_admin</code> 可以在系统管理中查看所有租户列表，每个租户数据完全隔离。</p>
+
+<h3>重置用户密码</h3>
+<p>管理员可在成员列表中点击「重置密码」为成员重置。也可在服务器上使用命令行工具：</p>
+<pre>node reset_pw.mjs 用户邮箱 新密码</pre>
+</section>
+
+<section id="backup">
+<h2>7 备份与恢复</h2>
+
+<h3>数据库备份</h3>
+<pre># PostgreSQL 备份
+pg_dump -U api -h localhost -d api > plantflow_$(date +%Y%m%d).sql
+# 压缩备份
+pg_dump -U api -h localhost -d api | gzip > plantflow_$(date +%Y%m%d).sql.gz
+
+# 自动备份脚本（添加到 crontab）
+# 0 3 * * * pg_dump -U api -h localhost -d api | gzip > /backups/plantflow_$(date +\%Y\%m\%d).sql.gz</pre>
+
+<h3>数据库恢复</h3>
+<pre># 恢复
+dropdb -U api -h localhost api
+createdb -U api -h localhost api
+psql -U api -h localhost -d api < plantflow_20260601.sql
+
+# 从压缩文件恢复
+gunzip -c plantflow_20260601.sql.gz | psql -U api -h localhost -d api</pre>
+
+<h3>数据迁移</h3>
+<p>数据库迁移文件位于 <code>api/migrations/</code>，首次启动时自动执行。如需手动迁移：</p>
+<pre># 重新执行所有迁移
+psql -U api -h localhost -d api -f api/migrations/001_init.sql
+# ... 按顺序执行每个 sql 文件
+
+# 首次启动会自动执行迁移，删除所有表后重启也会重新创建
+# 安全方式：NODE_ENV=development node dist-api/server.js  # 开发模式自动迁移</pre>
+
+<h3>文件备份（部署配置）</h3>
+<pre># 备份 .env 和环境配置
+cp .env /backups/env.backup.$(date +%Y%m%d)
+# 备份整个项目（不包含 node_modules）
+tar czf /backups/plantflow-source.$(date +%Y%m%d).tar.gz \
+  --exclude=node_modules \
+  --exclude=.git \
+  /var/www/plantflow/</pre>
+</section>
+
+<section id="monitor">
+<h2>8 监控与日志</h2>
+
+<h3>健康检查</h3>
+<pre># API 健康检查
+curl -s https://你的域名/api/health
+# 返回示例: {"ok":true,"db":"connected","redis":"connected","queueDepth":0,"uptime":12345}</pre>
+
+<div class="tip">配置外部监控（如 UptimeRobot）定期检查 <code>/api/health</code> 端点，异常时发送告警。</div>
+
+<h3>PM2 监控</h3>
+<pre>pm2 list           # 查看进程列表
+pm2 monit          # 实时资源监控
+pm2 logs plantflow --lines 200  # 查看最近 200 行日志
+pm2 show plantflow # 查看进程详情</pre>
+
+<h3>Docker 监控</h3>
+<pre>docker stats               # 容器资源使用
+docker compose logs -f     # 实时日志
+docker logs plantflow-api --tail 200  # 查看最近日志</pre>
+
+<h3>应用层日志</h3>
+<p>PlantFlow 使用 <code>console.log</code> 输出日志。PM2 默认将日志输出到 <code>~/.pm2/logs/</code> 目录。</p>
+<p>建议配置日志轮转：</p>
+<pre>pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 100M
+pm2 set pm2-logrotate:retain 7</pre>
+
+<h3>执行队列监控</h3>
+<p>通过健康检查接口可以查看队列深度（<code>queueDepth</code>）。正常情况下队列深度应为 0 或很小的数值。如果持续堆积，说明执行速度跟不上入队速度，考虑增加 <code>WORKER_CONCURRENCY</code>。</p>
+</section>
+
+<section id="upgrade">
+<h2>9 升级指南</h2>
+
+<h3>从源码升级</h3>
+<pre>cd /var/www/plantflow
+
+# 1. 备份
+pg_dump -U api -h localhost -d api > upgrade_backup.sql
+
+# 2. 拉取最新代码
+git pull origin main
+
+# 3. 安装依赖
+npm install --omit=dev
+
+# 4. 重新构建
+npm run build
+
+# 5. 重启服务
+pm2 restart plantflow</pre>
+
+<h3>从 Docker 升级</h3>
+<pre>cd /www/wwwroot/api
+
+# 1. 备份数据库（同上）
+
+# 2. 重新构建镜像
+docker compose build --no-cache api
+
+# 3. 重启
+docker compose up -d api</pre>
+
+<h3>数据库迁移</h3>
+<p>服务启动时会自动检查并执行未完成的迁移（<code>api/migrations/</code> 目录中的 SQL 文件）。迁移是幂等的，可安全重复执行。</p>
+<div class="note">升级后务必验证：<code>curl -s https://你的域名/api/health</code> 返回正常，并测试核心功能（登录、工作流执行）。</div>
+</section>
+
+<section id="troubleshoot">
+<h2>10 排错指南</h2>
+
+<h3>服务启动失败</h3>
+<table>
+  <tr><th>现象</th><th>排查步骤</th></tr>
+  <tr><td>端口被占用</td><td><code>lsof -i :5000</code> 查看占用进程，修改 PORT 或停止占用进程</td></tr>
+  <tr><td>数据库连接失败</td><td>检查 <code>DATABASE_URL</code> 是否正确；确认 PostgreSQL 正在运行：<code>systemctl status postgresql</code></td></tr>
+  <tr><td>Redis 连接失败</td><td>检查 <code>REDIS_URL</code> 是否正确；确认 Redis 正在运行：<code>systemctl status redis</code></td></tr>
+  <tr><td>迁移执行失败</td><td>查看服务日志中的具体错误，通常是权限问题或表中已存在数据</td></tr>
+</table>
+
+<h3>运行时问题</h3>
+<table>
+  <tr><th>现象</th><th>可能原因</th><th>解决方案</th></tr>
+  <tr><td>AI 对话无响应</td><td>模型配置错误或 API Key 失效</td><td>在「AI · 模型」中测试连通性</td></tr>
+  <tr><td>知识库检索为空</td><td>未配置 Embedding 模型</td><td>切换为关键词检索，或配置 Embedding 后重向量化</td></tr>
+  <tr><td>定时任务未触发</td><td>工作流未发布</td><td>点击「发布」按钮</td></tr>
+  <tr><td>飞书/企微推送失败</td><td>渠道配置错误</td><td>检查 AppId/Secret，测试发送验证</td></tr>
+  <tr><td>工作流执行超时</td><td>并发量过高或外部 API 慢</td><td>增加 <code>WORKER_CONCURRENCY</code>，或优化工作流</td></tr>
+  <tr><td>登录失败</td><td>密码错误或账号被锁定</td><td>管理员重置密码：<code>node reset_pw.mjs 邮箱 新密码</code></td></tr>
+  <tr><td>页面 404</td><td>前端构建未更新</td><td>重新执行 <code>npm run build</code> 构建前端</td></tr>
+</table>
+
+<h3>性能优化</h3>
+<table>
+  <tr><th>场景</th><th>优化措施</th></tr>
+  <tr><td>高并发工作流执行</td><td>增加 WORKER_CONCURRENCY；使用更强的 CPU</td></tr>
+  <tr><td>大量知识库文档</td><td>优化分段策略；使用 pgvector 索引；配置专用 Embedding 服务</td></tr>
+  <tr><td>页面加载慢</td><td>配置 Nginx 缓存静态资源；启用 gzip 压缩；使用 CDN</td></tr>
+  <tr><td>数据库查询慢</td><td>执行 <code>VACUUM ANALYZE</code>；检查慢查询日志；添加必要索引</td></tr>
+</table>
+
+<h3>安全建议</h3>
+<ul>
+  <li>生产环境必须使用 HTTPS</li>
+  <li>定期更换 LLM_MASTER_KEY 和数据库密码</li>
+  <li>使用强密码（推荐密码管理器生成）</li>
+  <li>限制管理后台的访问 IP</li>
+  <li>启用审计日志监控异常操作</li>
+  <li>不要在代码或 .env 中提交真实密钥到 Git</li>
+</ul>
+</section>
+
+<section id="tools">
+<h2>11 运维工具</h2>
+
+<p>项目根目录提供以下运维脚本：</p>
+<table>
+  <tr><th>脚本</th><th>用途</th><th>用法</th></tr>
+  <tr><td><code>chk.mjs</code></td><td>环境检查</td><td><code>node chk.mjs</code></td></tr>
+  <tr><td><code>reset_pw.mjs</code></td><td>重置用户密码</td><td><code>node reset_pw.mjs admin@example.com newpass123</code></td></tr>
+  <tr><td><code>qdb.mjs</code></td><td>数据库查询工具</td><td><code>node qdb.mjs "SELECT * FROM users"</code></td></tr>
+  <tr><td><code>gen_hash.cjs</code></td><td>生成密码哈希</td><td><code>node gen_hash.cjs 明文密码</code></td></tr>
+</table>
+
+<h3>快捷检查清单</h3>
+<pre># 部署后验证清单
+echo "=== 1. 健康检查 ==="
+curl -s https://你的域名/api/health | python3 -m json.tool
+echo "=== 2. 登录测试 ==="
+curl -s -X POST https://你的域名/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@example.com","password":"admin123"}'
+echo "=== 3. 进程状态 ==="
+pm2 list
+echo "=== 4. 磁盘空间 ==="
+df -h /
+echo "=== 5. 内存使用 ==="
+free -h
+echo "=== 6. 系统负载 ==="
+uptime</pre>
+</section>
+
+</main>
+</body>
+</html>

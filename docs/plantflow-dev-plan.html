@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantFlow 开发计划 v1（基于方案 v3 + AI 员工报告 · 2026-08）</title>
+<style>
+  :root{--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--bg:#f5f7fa;--card:#fff;
+    --p0:#dc2626;--p1:#ea580c;--p2:#2563eb;--brand:#4f46e5;--ok:#059669;--no:#dc2626}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65}
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 60px}
+  header{background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;border-radius:16px;padding:26px 30px;margin-bottom:22px}
+  header h1{margin:0 0 6px;font-size:23px}
+  header p{margin:6px 0 0;opacity:.93;font-size:13px}
+  .tags span{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:2px 10px;border-radius:20px;font-size:11.5px;margin-right:6px}
+  h2{font-size:17px;margin:30px 0 12px;padding-left:10px;border-left:4px solid var(--brand)}
+  h3{font-size:14.5px;margin:18px 0 6px;color:#1e3a8a}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f0f2f6;font-weight:600}
+  td.id{font-weight:700;white-space:nowrap;font-family:Menlo,Consolas,monospace}
+  .pr{display:inline-block;padding:1px 9px;border-radius:14px;font-size:11px;color:#fff;white-space:nowrap}
+  .pr.p0{background:var(--p0)}.pr.p1{background:var(--p1)}.pr.p2{background:var(--p2)}
+  .size{font-weight:600}
+  ul{margin:6px 0 0;padding-left:20px}li{margin:3px 0}
+  code{background:#eef1f6;padding:1px 6px;border-radius:5px;font-size:12px;color:#344;font-family:Menlo,Consolas,monospace}
+  .stage{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:12px;border-left:4px solid var(--brand)}
+  .stage b{display:block;margin-bottom:6px;font-size:14px}
+  .stage .meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .stage .verify{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:12.5px}
+  .stage .verify b{color:#065f46}
+  .legend{font-size:12px;color:var(--muted);margin-bottom:6px}
+  footer{margin-top:30px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+  .toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-bottom:14px}
+  .toc a{display:block;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;text-decoration:none;color:var(--ink);font-size:12.5px}
+  .toc a:hover{border-color:var(--brand);color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>PlantFlow 开发计划 v1</h1>
+  <div class="tags"><span>开发计划</span><span>方案 v3 落地</span><span>6 个阶段</span><span>任务卡</span><span>依赖关系</span><span>基于代码实测 2026-08</span></div>
+  <p>把方案 v3 + AI 员工报告里的功能/优化/修复拆成可执行任务，明确前后端、库表、接口、测试项、估算与里程碑。本计划与方案 v3 编号完全一致（N1–N9 / O1–O5 / F1–F6），可直接按编号排期。</p>
+</header>
+
+<div class="card">
+  <h3 style="margin-top:0">目录（按阶段跳转）</h3>
+  <div class="toc">
+    <a href="#s0">阶段 0 · 共识与准备</a>
+    <a href="#s1">阶段 1 · 数据地基 + Agent 地基</a>
+    <a href="#s2">阶段 2 · 多 Agent 编排 + 分行业模板</a>
+    <a href="#s3">阶段 3 · 拓第三方 + 全员安全</a>
+    <a href="#s4">阶段 4 · 协作与权限</a>
+    <a href="#s5">阶段 5 · 配套与运营</a>
+    <a href="#metric">关键度量与风险</a>
+    <a href="#mapping">与方案 v3 / AI 员工报告映射</a>
+  </div>
+</div>
+
+<h2 id="s0">阶段 0 · 共识与准备（1 周）</h2>
+<div class="card stage">
+  <b>阶段 0 · 目标</b>
+  <div class="meta">无新增功能；把后续 5 个阶段的工程底座打通</div>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>验收</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">P0.1</td><td>规划数据接入层 API 契约</td><td>docs/</td><td>统一认证结构、字段脱敏规则、限频上限、租户隔离原则</td><td>docs/data-access-contract.md 评审通过</td><td>2d</td></tr>
+      <tr><td class="id">P0.2</td><td>统一错误码与日志规范</td><td>api/</td><td>错误响应结构、日志字段、trace_id 透传</td><td>可在前端全局拦截</td><td>1d</td></tr>
+      <tr><td class="id">P0.3</td><td>CI 基础（构建/lint/test）</td><td>repo</td><td>前后端 lint、TS 类型、单元测试 baseline</td><td>main 分支构建+测试必过</td><td>2d</td></tr>
+      <tr><td class="id">P0.4</td><td>迁移脚本规范</td><td>api/migrations</td><td>命名、幂等、回滚约定</td><td>下一阶段首个迁移按规范出</td><td>0.5d</td></tr>
+    </tbody>
+  </table>
+  <div class="verify"><b>阶段 0 验收：</b>后续阶段 1 的任务能直接进入开发，不再因架构规范反复</div>
+</div>
+
+<h2 id="s1">阶段 1 · 数据地基 + Agent 地基（3–5 周）</h2>
+<div class="card stage">
+  <b>阶段 1 · 目标</b>
+  <div class="meta">打地基：数据能流进来，单 Agent 能思考+调工具；多 Agent 联动所需的运行时容器就绪</div>
+
+  <h3>1.1 N9 集中数据接入层（P0）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N9.1</td><td>数据源连接管理后端</td><td>api/</td><td>迁移表 <code>data_sources (id, tenant_id, kind, config_encrypted, created_at)</code>；CRUD；KMS 加密存储凭证</td><td>P0.1</td><td>3d</td></tr>
+      <tr><td class="id">N9.2</td><td>通用取数 API</td><td>api/routes/data-access.ts</td><td><code>POST /api/data-access/query</code>；统一鉴权、租户隔离、字段脱敏、限频</td><td>N9.1</td><td>3d</td></tr>
+      <tr><td class="id">N9.3</td><td>连接测试与监控</td><td>api/routes/data-access.ts + admin UI</td><td>测连、心跳、最后成功时间、错误次数</td><td>N9.1</td><td>1d</td></tr>
+      <tr><td class="id">N9.4</td><td>数据源管理页</td><td>src/pages/DataSources.tsx</td><td>列表/新增/编辑/删除/测连</td><td>N9.3</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.2 N4 第一批：内部系统/数据库连接器（P0）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N4.1</td><td>MySQL/PostgreSQL 只读连接器</td><td>api/connectors/mysql.ts pg.ts</td><td>参数化、只读账号强制、查询白名单、查询超时、结果集上限</td><td>N9</td><td>3d</td></tr>
+      <tr><td class="id">N4.2</td><td>HTTP 通用连接器</td><td>api/connectors/http.ts</td><td>Bearer/签名/自定义头模板；SSRF 防护（已实现，复用）</td><td>N9</td><td>2d</td></tr>
+      <tr><td class="id">N4.3</td><td>连接器 SDK 抽象</td><td>api/connectors/base.ts</td><td>定义 <code>connect.test/query/list</code>；让后续第三方按规范接入</td><td>—</td><td>1d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.3 N1-A 单 Agent 地基（P0，必走）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N1A.1</td><td>Tool Registry（工具注册表）</td><td>api/engine/agent/tools.ts</td><td>每个工具 = name + schema + invoke；预置工作流/HTTP/知识库/DataAccess 工具</td><td>N9</td><td>3d</td></tr>
+      <tr><td class="id">N1A.2</td><td>LLM 客户端统一封装</td><td>api/engine/agent/llm.ts</td><td>复用现有 ai-models 配置；统一 chat / tool-call / streaming 接口</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">N1A.3</td><td>Agent 执行引擎（单 Agent）</td><td>api/engine/agent/runner.ts</td><td>LLM 意图 → 选择工具 → 执行 → 反馈 LLM → 汇总；可中断/可重试</td><td>N1A.1 N1A.2</td><td>4d</td></tr>
+      <tr><td class="id">N1A.4</td><td>会话与记忆</td><td>api/migrations/0xx_agent.sql</td><td><code>agent_sessions (id, tenant_id, channel, external_id, summary, history_json)</code>；上下文压缩</td><td>—</td><td>2d</td></tr>
+      <tr><td class="id">N1A.5</td><td>替换 bot-engine 关键词匹配</td><td>api/routes/bot-engine.ts</td><td>保留表单场景作为低门槛路径；新加 Agent 路径</td><td>N1A.3</td><td>2d</td></tr>
+      <tr><td class="id">N1A.6</td><td>Agent 调试面板（前端）</td><td>src/pages/AgentDebug.tsx</td><td>看意图、看工具调用、看每步结果</td><td>N1A.3</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>1.4 F1 / F2 可靠性（P0）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">F1.1</td><td>队列重试 ＋ 死信</td><td>api/engine/queue.ts</td><td>指数退避（1/4/16s）、死信表 <code>dead_letters</code>、可重投</td><td>—</td><td>2d</td></tr>
+      <tr><td class="id">F1.2</td><td>幂等键</td><td>api/engine/queue.ts</td><td>同 id+tenant+key 同时间窗只跑一次</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">F2.1</td><td>工作流/Agent 超时</td><td>api/engine/executor.ts agent/runner.ts</td><td>总超时、节点超时、循环上限；前端可视化</td><td>—</td><td>2d</td></tr>
+      <tr><td class="id">F2.2</td><td>LLM 调用限时</td><td>api/engine/agent/llm.ts</td><td>tool call 总轮数限制、单轮响应时长上限</td><td>—</td><td>1d</td></tr>
+    </tbody>
+  </table>
+
+  <div class="verify"><b>阶段 1 验收：</b>在 IM（飞书/企微）里问「今天有哪些质检异常」，单 Agent 自动识别意图 → 选 DataAccess 工具 → 查内部库 → 返回结构化结果；同时队列有重试 + 超时保护</div>
+</div>
+
+<h2 id="s2">阶段 2 · 多 Agent 编排 + 分行业模板（4–6 周）</h2>
+<div class="card stage">
+  <b>阶段 2 · 目标</b>
+  <div class="meta">实现多 Agent 联动（本次护城河），同时落地分行业模板，先把工厂/MES 做透</div>
+
+  <h3>2.1 N1-B 多 Agent 编排（P0，本次重点）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N1B.1</td><td>Agent 角色定义</td><td>api/migrations/0xx_agents.sql</td><td><code>agents (id, tenant_id, role, name, system_prompt, tool_ids, allowed_data_sources, scope)</code></td><td>N1A</td><td>2d</td></tr>
+      <tr><td class="id">N1B.2</td><td>Orchestrator 主 Agent</td><td>api/engine/agent/orchestrator.ts</td><td>解析任务 → 分派/并行子 Agent → 汇总结果回 IM</td><td>N1B.1</td><td>4d</td></tr>
+      <tr><td class="id">N1B.3</td><td>子 Agent 编排引擎</td><td>api/engine/agent/sub.ts</td><td>消息传递、接力、并行、上下文共享、结果合并</td><td>N1A</td><td>4d</td></tr>
+      <tr><td class="id">N1B.4</td><td>Agent 调用链可视化</td><td>src/pages/AgentDebug.tsx</td><td>主+子 Agent 树形展示、耗时、token、失败重试</td><td>N1B.2</td><td>2d</td></tr>
+      <tr><td class="id">N1B.5</td><td>主动巡检调度（"员工感"点睛）</td><td>api/engine/scheduler.ts</td><td>Cron 触发 Orchestrator 主动跑 → 异常推送给负责人</td><td>N1B.2</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 N2 分行业场景模板市场（P0）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N2.1</td><td>模板 schema 与导入/导出</td><td>api/migrations/0xx_templates.sql</td><td><code>templates (industry, role, steps_json, agent_config_json)</code>；DSL 导出</td><td>N1B</td><td>2d</td></tr>
+      <tr><td class="id">N2.2</td><td>工厂/MES 模板做透</td><td>seed/templates/mes/</td><td>库存查询、工单追踪、质检异常、排产/交期、设备报修、报表推送、知识库问答</td><td>—</td><td>4d</td></tr>
+      <tr><td class="id">N2.3</td><td>其他行业模板铺开</td><td>seed/templates/</td><td>餐饮/零售/美业/维修/医疗/教育/物流/通用办公等首版</td><td>N2.2</td><td>3d</td></tr>
+      <tr><td class="id">N2.4</td><td>模板市场页</td><td>src/pages/TemplateMarket.tsx</td><td>行业筛选、一键导入、详情预览</td><td>N2.1</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 N3 AI 辅助搭建（P0）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">N3.1</td><td>NL → 工作流/Agent DSL</td><td>api/routes/ai-build.ts</td><td>复用 LLM；按模板 schema 生成；可微调</td><td>N2.1</td><td>3d</td></tr>
+      <tr><td class="id">N3.2</td><td>编辑器内 AI 改图</td><td>src/pages/WorkflowEditor.tsx</td><td>"把这步改为异步"+ 高亮差异</td><td>N3.1</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.4 O1 Bot 助手混合模式（P1）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">O1.1</td><td>混合路由（表单 vs Agent）</td><td>api/routes/bot-engine.ts</td><td>简单请求走表单（保留低门槛），复杂走 Agent；用户可手动切换</td><td>N1A.5</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <div class="verify"><b>阶段 2 验收：</b>「今天有哪些质检异常 + 查 A 物料库存 + 生成日报推到产线群」，主 Agent 分派多个子 Agent 并行完成、调用链可视化、token 可计量；模板市场可一键导入工厂 MES 场景</div>
+</div>
+
+<h2 id="s3">阶段 3 · 拓第三方 + 全员安全（3–4 周）</h2>
+<div class="card stage">
+  <b>阶段 3 · 目标</b>
+  <div class="meta">连接第三方平台，把一线员工也用起来的安全前提做好</div>
+
+  <h3>3.1 N4 第二批：第三方平台连接器（P1）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">N4.4</td><td>通用第三方 API 模板</td><td>api/connectors/oauth.ts apikey.ts</td><td>OAuth/API Key 模板；支持电商/ERP/门店类 API 接入</td><td>N4.2</td><td>3d</td></tr>
+      <tr><td class="id">N4.5</td><td>表格导入 (CSV/XLSX)</td><td>api/connectors/spreadsheet.ts</td><td>流式解析、行数上限、字段映射</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">N4.6</td><td>邮件/云存储</td><td>api/connectors/email.ts oss.ts</td><td>SMTP/IMAP + OSS/COS/S3 上传；安全凭证</td><td>N9</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 N5 执行告警（P1）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">N5.1</td><td>失败/超时告警</td><td>api/engine/notify.ts</td><td>Inbox + 企微/飞书/钉钉推送；页面一键重试</td><td>F1</td><td>1d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.3 N8 细粒度 RBAC（P1，提前）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">N8.1</td><td>按资源授权</td><td>api/middleware/rbac.ts</td><td>页面/节点/连接器/知识库/Agent 的可见与操作权限</td><td>—</td><td>3d</td></tr>
+      <tr><td class="id">N8.2</td><td>一线员工数据可见隔离</td><td>api/middleware/rbac.ts</td><td>DataAccess 层强制 scope 过滤</td><td>N9</td><td>2d</td></tr>
+      <tr><td class="id">N8.3</td><td>RBAC 管理页</td><td>src/pages/Roles.tsx</td><td>角色、权限矩阵</td><td>N8.1</td><td>1d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.4 F3 / F4 安全加固（P1）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">F3.1</td><td>通用 rate-limit 中间件</td><td>api/middleware/ratelimit.ts</td><td>Redis 令牌桶；按 IP/user/route</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">F3.2</td><td>Webhook 签名校验</td><td>api/routes/channels.ts</td><td>各渠道接入签名验证</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">F4.1</td><td>多租户越权复查</td><td>api/</td><td>grep + 单测覆盖所有 SQL 强制带 tenant_id</td><td>—</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.5 O2 工作流编辑器（P1）</h3>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+      <tr><td class="id">O2.1</td><td>节点级单测</td><td>src/pages/WorkflowEditor.tsx</td><td>右键单点运行看输出</td><td>—</td><td>2d</td></tr>
+      <tr><td class="id">O2.2</td><td>执行回放/断点高亮</td><td>src/pages/WorkflowEditor.tsx</td><td>逐节点高亮、可断点</td><td>—</td><td>2d</td></tr>
+    </tbody>
+  </table>
+
+  <div class="verify"><b>阶段 3 验收：</b>一线员工在 IM 问"我负责的订单进度"，Agent 查 → 仅返回本人可见范围；任意服务异常/超时自动推送告警；编辑器可单步调试</div>
+</div>
+
+<h2 id="s4">阶段 4 · 协作与权限（3–4 周，可作为商业版差异化）</h2>
+<div class="card stage">
+  <b>阶段 4 · 目标</b>
+  <div class="meta">让多人能一起用、有协作感。开源独立版不强求，但作为商业版差异化卖点建议落地</div>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">C1</td><td>团队/空间数据模型</td><td>api/migrations/0xx_team.sql</td><td><code>teams / spaces / members / role_bindings</code>；资源挂到 space 下</td><td>N8</td><td>3d</td></tr>
+      <tr><td class="id">C2</td><td>协作编辑 (WebSocket + 协作锁)</td><td>api/sockets + src/pages/WorkflowEditor.tsx</td><td>Y.js/CRDT 或简单协作锁；冲突合并</td><td>C1</td><td>5d</td></tr>
+      <tr><td class="id">C3</td><td>评论 / @提醒 / 任务流转</td><td>api/routes/comments.ts + UI</td><td><code>comments / mentions / tasks</code> 表</td><td>C1</td><td>3d</td></tr>
+      <tr><td class="id">C4</td><td>通知中心</td><td>api/routes/notifications.ts + UI</td><td>站内 / 邮件 / IM 推送聚合</td><td>C3</td><td>2d</td></tr>
+    </tbody>
+  </table>
+  <div class="verify"><b>阶段 4 验收：</b>3 人团队同时编辑一个工作流，有评论、有提醒、有审计记录；权限按 team/space 隔离</div>
+</div>
+
+<h2 id="s5">阶段 5 · 配套与运营（2–3 周）</h2>
+<div class="card stage">
+  <b>阶段 5 · 目标</b>
+  <div class="meta">让平台长期能运营：版本管理、知识库增强、MES 联动、计量</div>
+  <table>
+    <thead><tr><th style="width:60px">ID</th><th>任务</th><th>位置</th><th>关键动作</th><th>依赖</th><th class="size">估时</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N6</td><td>子工作流 + 版本管理</td><td>api/</td><td>嵌套调用、历史版本、发布/回滚</td><td>—</td><td>3d</td></tr>
+      <tr><td class="id">O3</td><td>RAG 增强</td><td>api/engine/rag.ts</td><td>多策略切片、引用回显、混合检索+Rerank</td><td>—</td><td>3d</td></tr>
+      <tr><td class="id">O4</td><td>Cron 可视化 + 时区</td><td>src/pages/Schedules.tsx</td><td>日历选择 + 时区 UI（后端已支持）</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">O5</td><td>MES 联动 (lightmes/cenkormes)</td><td>api/routes/webhooks.ts + MES 端</td><td>提供 REST 配置/事件订阅接口；事件触发工作流与 Agent</td><td>N1B</td><td>2d</td></tr>
+      <tr><td class="id">N7</td><td>运营计量</td><td>api/routes/metrics.ts</td><td>Agent 调用次数、token 用量、按 tenant 计费</td><td>—</td><td>2d</td></tr>
+      <tr><td class="id">F5</td><td>大文件/解析边界</td><td>api/</td><td>上传大小与类型白名单、解析资源上限</td><td>—</td><td>1d</td></tr>
+      <tr><td class="id">F6</td><td>可观测性</td><td>api/</td><td>执行与 Agent 调用链日志落库可检索、关键操作审计、token/成本记录</td><td>—</td><td>2d</td></tr>
+    </tbody>
+  </table>
+  <div class="verify"><b>阶段 5 验收：</b>完整 SaaS 化运营能力 + 与 MES 双向联动</div>
+</div>
+
+<h2 id="metric">关键度量与风险</h2>
+<div class="card">
+  <h3 style="margin-top:0">关键度量（每迭代必须看）</h3>
+  <ul>
+    <li><b>Agent 任务成功率</b> ≥ 90%（工具调用全成功）</li>
+    <li><b>Agent 平均响应时长</b> P95 ≤ 6s（含工具调用）</li>
+    <li><b>队列积压</b> 0 持续超过 5 分钟</li>
+    <li><b>多 Agent 一次完成率</b> ≥ 70%（不需用户追问）</li>
+    <li><b>模板导入转化率</b> ≥ 40%</li>
+    <li><b>一线员工周活</b>（用 IM 调 Agent 的次数 / 人 / 周）</li>
+  </ul>
+  <h3>风险与缓解</h3>
+  <ul>
+    <li><b>LLM 成本失控</b>：每工具调用限长 / 每会话 token 上限 / 缓存高频查询</li>
+    <li><b>越权</b>：DataAccess 层强制 scope，所有工具调用带 tenant_id；F4 必做</li>
+    <li><b>Agent 死循环</b>：F2 强制总轮数 + 单轮超时</li>
+    <li><b>第三方 API 限频</b>：连接器 SDK 内置限频与退避</li>
+    <li><b>多 Agent 上下文爆炸</b>：上下文压缩 + 摘要 + 只传必要数据</li>
+  </ul>
+</div>
+
+<h2 id="mapping">与方案 v3 / AI 员工报告映射</h2>
+<div class="card">
+  <table>
+    <thead><tr><th style="width:80px">方案 v3 项</th><th>开发计划 ID</th><th>阶段</th></tr></thead>
+    <tbody>
+      <tr><td>N1-A 单 Agent</td><td>N1A.1–N1A.6</td><td>1</td></tr>
+      <tr><td>N1-B 多 Agent 编排</td><td>N1B.1–N1B.5</td><td>2</td></tr>
+      <tr><td>N2 分行业模板</td><td>N2.1–N2.4</td><td>2</td></tr>
+      <tr><td>N3 AI 辅助搭建</td><td>N3.1–N3.2</td><td>2</td></tr>
+      <tr><td>N4 数据连接器</td><td>N4.1–N4.6</td><td>1（第一批） / 3（第二批）</td></tr>
+      <tr><td>N5 执行告警</td><td>N5.1</td><td>3</td></tr>
+      <tr><td>N6 子工作流 + 版本</td><td>N6</td><td>5</td></tr>
+      <tr><td>N7 多租户运营</td><td>N7</td><td>5</td></tr>
+      <tr><td>N8 细粒度 RBAC</td><td>N8.1–N8.3</td><td>3</td></tr>
+      <tr><td>N9 集中数据接入层</td><td>N9.1–N9.4</td><td>1</td></tr>
+      <tr><td>O1 Bot 混合模式</td><td>O1.1</td><td>2</td></tr>
+      <tr><td>O2 编辑器调试</td><td>O2.1–O2.2</td><td>3</td></tr>
+      <tr><td>O3 RAG 增强</td><td>O3</td><td>5</td></tr>
+      <tr><td>O4 Cron 可视化</td><td>O4</td><td>5</td></tr>
+      <tr><td>O5 MES 联动</td><td>O5</td><td>5</td></tr>
+      <tr><td>F1 队列可靠性</td><td>F1.1–F1.2</td><td>1</td></tr>
+      <tr><td>F2 超时/取消</td><td>F2.1–F2.2</td><td>1</td></tr>
+      <tr><td>F3 限流/授权</td><td>F3.1–F3.2</td><td>3</td></tr>
+      <tr><td>F4 多租户隔离</td><td>F4.1</td><td>3</td></tr>
+      <tr><td>F5 大文件边界</td><td>F5</td><td>5</td></tr>
+      <tr><td>F6 可观测性</td><td>F6</td><td>5</td></tr>
+      <tr><td>AI 员工报告 · A 阶段</td><td>对应阶段 1 + 2 前半</td><td>1–2</td></tr>
+      <tr><td>AI 员工报告 · B 阶段</td><td>对应阶段 2 后半（N1B / 主动巡检 / O3）</td><td>2 / 5</td></tr>
+      <tr><td>AI 员工报告 · C 阶段</td><td>对应阶段 4（团队协作）</td><td>4</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>本计划基于 PlantFlow 源码实测（2026-08-21），与方案 v3 编号完全一致；估算为建议值，可按团队节奏调整。配套文档：<code>plantflow-iter-plan.html</code>（方案 v3）、<code>plantflow-ai-employee-teamwork.html</code>（AI 员工与协作可行性报告）。</footer>
+</div>
+</body>
+</html>
