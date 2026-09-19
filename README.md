@@ -31,14 +31,14 @@
 
 ```mermaid
 flowchart TD
-    A["拖拽式工作流编辑器<br/>节点 · 分支 · 并行 · 子工作流 · 模板"]
-    B["触发器<br/>手动 · 对话 · Webhook · Cron · 企微 · 飞书"]
-    C["节点执行<br/>逻辑 / 条件 / 并行 / AI(RAG/Agent) / 集成"]
-    D["对话应用<br/>OpenAI 兼容 API · 网页嵌入"]
-    E["渠道<br/>企业微信 · 飞书 推送与回调"]
-    A --> B --> C --> D & E
-    F["知识库<br/>上传 / 粘贴 · 关键词+向量双检索"] -.-> C
-    G["可观测性 / 失败告警 / 审计日志"] -.-> C
+    A[工作流编辑器] --> B[触发器]
+    B --> C[节点执行]
+    C --> D[对话应用]
+    C --> E[渠道交付]
+    B --> B1[手动 / 对话 / Webhook / Cron / 企业微信 / 飞书]
+    C --> C1[逻辑 / 条件 / 并行 / AI]
+    G[知识库] -.-> C
+    H[可观测性 / 告警 / 审计] -.-> C
 ```
 
 ---
@@ -47,28 +47,31 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    subgraph Clients["终端 / 入口"]
-        A["网页聊天 · 嵌入"]
-        B["企业微信 / 飞书"]
-        C["Webhook"]
+    subgraph entrance[终端/入口]
+        A[网页聊天]
+        B[企业微信/飞书]
+        C[Webhook]
     end
-    subgraph App["应用服务（单进程 Express:5000）"]
-        D["工作流执行引擎 · 定时 Cron"]
-        E["对话 API · AI 网关 · Agent"]
-        F["知识库 RAG（关键词+向量）"]
-        G["渠道回调 / 消息推送"]
-        H["管理端页面（React 静态托管）"]
+    subgraph app[应用服务 Express:5000]
+        D[执行引擎/定时 Cron]
+        E[对话 API/AI 网关/Agent]
+        F[知识库 RAG]
+        G[渠道回调/消息推送]
+        H[管理页面 React]
     end
-    subgraph Data["数据与中间件"]
-        I[("PostgreSQL 16<br/>pgvector 向量检索")]
-        J[("Redis")]
-        K["对象存储<br/>S3 兼容（本地/云）"]
+    subgraph data[数据与中间件]
+        I[PostgreSQL + pgvector]
+        J[Redis]
+        K[对象存储 S3]
     end
-    A & B & C --> D & E & F & G
-    D & E & F & G --> H
-    D & E & F --> I
-    D & E --> J
-    F & G --> K
+    A --> D
+    B --> F
+    C --> G
+    D --> H
+    E --> H
+    F --> I
+    D --> J
+    F --> K
 ```
 
 ---
