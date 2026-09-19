@@ -1,200 +1,203 @@
 # PlantFlow（厂流）社区版
 
-**PlantFlow**（厂流）— 可视化工作流编排 + AI 知识库 + 对话应用，面向工厂/企业内部自动化。可理解为 **n8n（流程）+ Dify（AI 应用）** 的开源实现。
-
-> 本仓库为 **PlantFlow 开源版（Community Edition）**：单租户、MIT 协议、免费自部署。
-> 适合个人/企业内部自用；如需 **多租户、计费钱包、套餐订阅、平台运营管理**（商业版），请联系 contact@cenkor.cn。
+> 可视化工作流编排 + AI 知识库 + 对话应用 —— 面向工厂 / 企业内部的自动化平台。
+> 可理解为 **n8n（流程）+ Dify（AI 应用）** 的开源实现；单进程架构，一个服务同时托管 API（`/api/*`）与前端（`dist/`）。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose.yml)
+[![React](https://img.shields.io/badge/React-18-61DAFB)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6)](#)
+[![Express](https://img.shields.io/badge/Express-4-000000)](#)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1)](#)
+[![Deploy](https://img.shields.io/badge/Deploy-Docker_Compose-2496ED)](#)
 
-## 功能
+---
 
-- **工作流编辑器**：拖拽节点、条件分支、并行、子工作流、模板
-- **触发器**：手动、对话、Webhook、定时 Cron、企业微信、飞书
-- **AI**：对话、知识库 RAG、Agent（工具调用）
-- **知识库**：文件上传 / 粘贴导入、关键词与向量检索
-- **对话应用**：OpenAI 兼容 API、网页聊天嵌入
-- **渠道**：企业微信、飞书消息推送与回调
-- **运维**：执行中心、会话 Inbox、可观测性、失败告警、定时任务、审计日志
+## 为什么选择 PlantFlow
+
+- **一条命令开箱即用**：`docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack up -d --build` 拉起 应用 + PostgreSQL（内置 pgvector）+ Redis，无需手动装任何依赖。
+- **单进程即全栈**：Express 同时托管后端 API 与编译后的前端页面，域名只需反代到 `127.0.0.1:5000` 即可。
+- **AI 能力开箱可用**：对话、知识库 RAG、Agent（工具调用）；模型网关 OpenAI 兼容，可接入任意模型；pgvector 让向量检索立即可用。
+- **多触发与多渠道**：手动 / 对话 / Webhook / 定时 Cron / 企业微信 / 飞书。
+- **私有部署可控**：单租户、MIT 协议、免费自部署；支持 Docker、手动、宝塔 / Nginx 反代；可导出镜像离线部署。
+- **单企业 + 邀请制**：不开放自助注册，管理员在「账号设置 → 邀请员工」生成邀请链接，员工通过链接加入。
+
+---
+
+## 核心能力
+
+```
+拖拽编排 → 触发（对话/Webhook/Cron/企微/飞书） → 节点执行（逻辑/条件/并行/AI） → 渠道交付
+```
+
+```mermaid
+flowchart TD
+    A["拖拽式工作流编辑器<br/>节点 · 分支 · 并行 · 子工作流 · 模板"]
+    B["触发器<br/>手动 · 对话 · Webhook · Cron · 企微 · 飞书"]
+    C["节点执行<br/>逻辑 / 条件 / 并行 / AI(RAG/Agent) / 集成"]
+    D["对话应用<br/>OpenAI 兼容 API · 网页嵌入"]
+    E["渠道<br/>企业微信 · 飞书 推送与回调"]
+    A --> B --> C --> D & E
+    F["知识库<br/>上传 / 粘贴 · 关键词+向量双检索"] -.-> C
+    G["可观测性 / 失败告警 / 审计日志"] -.-> C
+```
+
+---
+
+## 系统架构
+
+```mermaid
+flowchart LR
+    subgraph Clients["终端 / 入口"]
+        A["网页聊天 · 嵌入"]
+        B["企业微信 / 飞书"]
+        C["Webhook"]
+    end
+    subgraph App["应用服务（单进程 Express:5000）"]
+        D["工作流执行引擎 · 定时 Cron"]
+        E["对话 API · AI 网关 · Agent"]
+        F["知识库 RAG（关键词+向量）"]
+        G["渠道回调 / 消息推送"]
+        H["管理端页面（React 静态托管）"]
+    end
+    subgraph Data["数据与中间件"]
+        I[("PostgreSQL 16<br/>pgvector 向量检索")]
+        J[("Redis")]
+        K["对象存储<br/>S3 兼容（本地/云）"]
+    end
+    A & B & C --> D & E & F & G
+    D & E & F & G --> H
+    D & E & F --> I
+    D & E --> J
+    F & G --> K
+```
+
+---
 
 ## 技术栈
 
 | 层 | 技术 |
 |----|------|
-| 前端 | React 18、Vite、React Flow、Tailwind |
-| 后端 | Express、TypeScript |
-| 数据 | PostgreSQL（可选 pgvector）、Redis |
-| 部署 | Docker Compose |
+| 前端 | React 18 · React Flow（@xyflow/react）· React Router · Zustand · Tailwind CSS · Vite |
+| 后端 | Express · TypeScript · node-cron |
+| 文档解析 | mammoth（Word）· pdf-parse（PDF）· xlsx（Excel） |
+| 数据库 / 缓存 | PostgreSQL 16（可选 pgvector）· MySQL（可选）· Redis |
+| 文件 / 上传 | multer · @aws-sdk/client-s3（S3 兼容对象存储） |
+| 通知 | nodemailer（邮件） |
+| 部署 | Docker Compose · Nginx（宿主反代） |
+
+---
 
 ## 快速开始
 
 ### 环境要求
 
-- Node.js 22+（本地开发）
-- PostgreSQL 14+（推荐 16，可选安装 [pgvector](https://github.com/pgvector/pgvector)）
-- Redis 6+
-- Docker & Docker Compose（生产推荐）
+| 方式 | 依赖 |
+|------|------|
+| Docker 一键部署 | Docker 20+ / Compose v2（推荐，内置数据库全部就绪） |
+| 本地开发 | Node.js 22+ · PostgreSQL 14+（推荐 16 + [pgvector](https://github.com/pgvector/pgvector)）· Redis 6+ |
 
-### 1. 克隆与配置
+### 方式一：Docker 一键启动（推荐，开箱即用）
 
-```bash
-git clone https://github.com/likele001/PlantFlow-community.git
-cd PlantFlow-community
-cp .env.example .env
-```
-
-编辑 `.env`：
-
-```bash
-# 生成 LLM 密钥加密主密钥（必填）
-openssl rand -hex 32
-# 将输出填入 LLM_MASTER_KEY=
-```
-
-**Docker 部署时**，`DATABASE_URL` / `REDIS_URL` 中的主机请用 `host.docker.internal` 访问宿主机服务。
-
-### 2. 准备数据库
-
-```sql
-CREATE USER api WITH PASSWORD 'your_db_password';
-CREATE DATABASE api OWNER api;
-```
-
-首次启动会自动执行迁移并创建演示数据。
-
-### 3. Docker 部署
-
-#### 一键部署（内置 PostgreSQL + Redis，推荐）
+内置 **应用 + PostgreSQL（pgvector）+ Redis** 三个服务，无需手动装库：
 
 ```bash
 # 1) 生成部署环境变量，然后编辑 .env.fullstack 必填 POSTGRES_PASSWORD、LLM_MASTER_KEY
 cp .env.fullstack.example .env.fullstack
 #    LLM_MASTER_KEY 生成：openssl rand -hex 32
 
-# 2) 一键构建并启动（应用 + PostgreSQL(pgvector) + Redis）
+# 2) 一键构建并启动
 docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack up -d --build
 ```
 
-- 首次启动自动执行数据库迁移并创建演示数据。
-- 访问：`http://127.0.0.1:5000`（或你反向代理的域名，见下 §3.1）。
+- **首次启动自动执行数据库迁移并创建演示数据**，无需额外初始化。
+- 访问：`http://127.0.0.1:5000`（或你反向代理的域名，见 §绑定域名与 HTTPS）。
+- 若 `POSTGRES_PASSWORD` 或 `LLM_MASTER_KEY` 未填写，命令会直接报错提示，属正常保护行为，填入即可。
 
 | 服务 | 默认对外端口（可在 `.env.fullstack` 覆盖） |
-|---|---|
+|------|-------------------------------------------|
 | 应用 | `FS_APP_PORT=5000` |
 | PostgreSQL（内置 pgvector，知识库向量检索开箱可用） | `FS_POSTGRES_PORT=5544` |
 | Redis | `FS_REDIS_PORT=6383` |
 
-常用命令：
+常用运维命令（替换为上面同款 `-f` / `--env-file` 前缀）：
 
 ```bash
-docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack ps          # 查看状态
-docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack logs -f app # 查看日志
-docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack down        # 停止
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack ps
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack logs -f app
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack down
 ```
-
-> 若 `POSTGRES_PASSWORD` 或 `LLM_MASTER_KEY` 未填写，上面命令会直接报错提示，属正常保护行为，填入即可。
 
 **无外网 / 内网离线部署**：在可联网机器上构建后导出镜像，目标机导入即可，无需再联网拉取：
 
 ```bash
-bash docker/fullstack/export-fullstack.sh          # 自动导出全部镜像到 tar.gz
-docker load < plantflow-fullstack_*.tar.gz         # 目标机导入
+bash docker/fullstack/export-fullstack.sh           # 自动导出全部镜像到 tar.gz
+docker load < plantflow-fullstack_*.tar.gz          # 目标机导入
 docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack up -d
 ```
 
-> 传统方式（应用连接你自建的宿主 PostgreSQL / Redis，需先按 §2 建库，并令 `.env` 中 `DATABASE_URL` / `REDIS_URL` 用 `host.docker.internal` 指向宿主机服务）：
+> **传统方式（可选）**（应用连接你自建的宿主 PostgreSQL / Redis，需先建库并令 `.env` 中 `DATABASE_URL` / `REDIS_URL` 用 `host.docker.internal` 指向宿主机服务）：
+>
+> ```bash
+> docker compose build
+> docker compose up -d
+> ```
 
-```bash
-docker compose build
-docker compose up -d
-```
-
-### 3.1 反向代理（Nginx / 宝塔）
-
-后端 Express 已同时托管 API (`/api/*`) 与编译后的前端 (`dist/`)，所以**最简单的部署是：把域名全部反代到 `127.0.0.1:5000`**，无需伪静态、无需绑目录。
-
-#### 方案 A：纯反代（推荐）
-
-宝塔面板 → 网站 → `你的域名` → 配置文件，替换为：
-
-```nginx
-server {
-    listen 80;
-    server_name api.example.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
-        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
-    }
-}
-```
-
-> 若已签发 SSL，把 `listen 80` 换成宝塔生成的 443 块，并在 `location /` 之前保留宝塔自动生成的 SSL 配置即可。
-
-#### 方案 B：网站根目录绑 `dist/` + `/api` 反代
-
-适合想直接由 Nginx 服务静态资源、把 API 单独反代的场景。
-
-1. 宝塔面板 → 网站 → 添加站点 → 网站根目录指向 `dist/`（Docker 容器内为 `/app/dist`，宿主机部署则为 `<项目目录>/dist`）。
-2. 配置文件加入伪静态（前端 SPA fallback）和 `/api` 反代：
-
-```nginx
-server {
-    listen 80;
-    server_name api.example.com;
-    root /www/wwwroot/api/dist;        # 改成你的 dist 实际路径
-    index index.html;
-
-    # 前端路由 fallback（伪静态）
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # 后端 API 反代
-    location /api/ {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
-        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
-    }
-}
-```
-
-#### 反代后健康检查
-
-```bash
-curl -s https://api.example.com/api/health
-```
-
-返回 `{"ok":true,...}` 即正常。
-
-### 4. 本地开发
+### 方式二：本地开发
 
 ```bash
 npm install
-npm run dev          # 前端 Vite + 后端 nodemon
-# 或分别：
-npm run client:dev
-npm run server:dev
+npm run dev            # 前端 Vite 热重载 + 后端 nodemon，一条命令
+# 或分别运行：
+npm run client:dev     # 前端 Vite
+npm run server:dev     # 后端 nodemon
 ```
 
-构建：
+生产构建与启动：
 
 ```bash
-npm run build
-npm run server:start
+npm run build          # 编译后端(dist-api) + 前端(dist)
+npm run server:start   # 运行编译后的产物（Node dist-api/server.js）
 ```
 
-### 5. 默认演示账号
+---
+
+## 绑定域名与 HTTPS（Docker 部署 · 可选）
+
+后端已用单个 Express 服务**同时托管 API（`/api/*`）与前端页面（`dist/`）**，所以最简单做法是把**整个域名反代到 `127.0.0.1:5000`**，无需伪静态、无需分开绑目录。
+
+- **宝塔面板**：DNS 把域名 A 记录指向服务器 IP → 网站 → 添加站点绑定域名 → 「反向代理 / 高级设置」填目标 `http://127.0.0.1:5000` → 站点 SSL 申请 Let's Encrypt 证书并强制 HTTPS。
+- **系统 Nginx**：
+
+```nginx
+server {
+    listen 80;
+    server_name api.example.com;
+
+    # WebSocket 支持（工作流实时通信 / 对话流）
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+反代后健康检查：
+
+```bash
+curl -s https://api.example.com/api/health
+# → {"success":true,"message":"ok","checks":{"database":true,"redis":true,...}}
+```
+
+---
+
+## 默认演示账号
 
 | 字段 | 值 |
 |------|-----|
@@ -205,37 +208,55 @@ npm run server:start
 
 > **账号说明**：本系统为「单企业 + 邀请制」，不开放自助注册。企业管理员登录后，在「账号设置 → 邀请员工」生成邀请链接，员工通过链接注册加入企业。
 
-## 配置说明
+---
+
+## 常用配置（`.env` / `.env.fullstack`）
 
 | 变量 | 说明 |
 |------|------|
 | `DATABASE_URL` | PostgreSQL 连接串 |
 | `REDIS_URL` | Redis 连接串 |
-| `LLM_MASTER_KEY` | 32 字节十六进制，用于加密存储的 LLM API Key |
+| `LLM_MASTER_KEY` | 32 字节十六进制，用于加密存储的 LLM API Key（必填，`openssl rand -hex 32` 生成） |
 | `WORKER_CONCURRENCY` | 工作流执行并发数 |
 | `PORT` | 服务端口，默认 5000 |
+| `FS_APP_PORT` / `FS_POSTGRES_PORT` / `FS_REDIS_PORT` | 全栈一键部署的对外端口（仅 `.env.fullstack`） |
 
 在 **AI · 模型** 页面配置大模型网关（OpenAI 兼容）。知识库向量检索需网关支持 `POST /v1/embeddings`。
 
-## 学习文档
-
-- [平台学习手册（Markdown）](docs/平台学习手册.md)
-- [平台学习手册（网页版）](docs/平台学习手册.pdf)
-- **[用户操作手册（网页版）](/docs/guide-user.html)** — 工作流编辑、知识库、对话应用、渠道接入全面指南
-- **[管理部署手册（网页版）](/docs/guide-admin.html)** — 宝塔/原生/Docker 部署、系统管理、备份恢复、排错
-
-构建后文档可通过 `https://你的域名/docs/guide-user.html` 和 `https://你的域名/docs/guide-admin.html` 访问。
+---
 
 ## 项目结构
 
 ```
-api/                 # Express 后端、迁移、执行引擎
-src/                 # React 前端
-public/              # 静态资源
-docs/                # 文档
-docker-compose.yml
-Dockerfile
+plantflow-community/
+├── api/                  # Express 后端、数据库迁移(migrations/)、工作流执行引擎
+├── src/                  # React 前端（Vite）
+├── public/               # 静态资源
+├── docs/                 # 学习手册 / 用户操作手册 / 管理部署手册（.md / .pdf / .html）
+├── docker/
+│   ├── fullstack/            # 全栈一键部署
+│   │   ├── app.Dockerfile        # 应用镜像（多阶段 Node 构建，含国内 npm 镜像加速）
+│   │   ├── env.fullstack.example # 全栈部署环境变量模板
+│   │   └── export-fullstack.sh   # 离线镜像导出脚本
+│   └── ...
+├── docker-compose.fullstack.yml  # 全栈一键部署（内置 PostgreSQL + Redis）
+├── docker-compose.yml            # 传统部署（连接宿主数据库）
+├── Dockerfile
+└── README.md
 ```
+
+---
+
+## 文档
+
+- [平台学习手册（Markdown）](docs/平台学习手册.md)
+- [平台学习手册（网页版）](docs/平台学习手册.pdf)
+- [用户操作手册（网页版）](/docs/guide-user.html) —— 工作流编辑、知识库、对话应用、渠道接入全面指南
+- [管理部署手册（网页版）](/docs/guide-admin.html) —— 宝塔 / 原生 / Docker 部署、系统管理、备份恢复、排错
+
+构建后文档可通过 `https://你的域名/docs/guide-user.html` 和 `https://你的域名/docs/guide-admin.html` 访问。
+
+---
 
 ## 开源版 vs 商业版
 
@@ -249,16 +270,82 @@ Dockerfile
 
 需要商业版（多租户 + 计费系统 + 平台运营）请联系：contact@cenkor.cn
 
-## License
-
-本项目采用 **MIT License**，可自由使用、修改、商用，保留版权声明即可。
-
-## 安全提示
-
-- **切勿**将 `.env` 提交到 Git
-- 若密钥曾泄露，请轮换：`LLM_MASTER_KEY`、数据库密码、Redis 密码、所有 LLM API Key
-- 生产环境使用 HTTPS，限制管理后台访问
+---
 
 ## 贡献
 
-欢迎 Issue 与 Pull Request。提交前请确保不包含真实密钥。
+欢迎提交 Issue 与 Pull Request。请遵循既有代码风格，并在修改后运行类型检查与 Lint：
+
+```bash
+npm run check   # tsc --noEmit
+npm run lint    # eslint
+```
+
+---
+
+## 安全提示
+
+- **切勿**将 `.env` 或 `.env.fullstack` 提交到 Git（`.gitignore` 已忽略）。
+- 生产环境务必设置固定强密钥：`LLM_MASTER_KEY`（≥32 字节）、数据库密码、Redis 密码。
+- 若密钥曾泄露，请轮换：`LLM_MASTER_KEY`、数据库密码、Redis 密码、所有 LLM API Key。
+- 生产环境使用 HTTPS，限制管理后台访问。
+
+---
+
+## 许可证与致谢
+
+本项目采用 **MIT License** 开源协议，详见 [LICENSE](LICENSE)。可自由使用、修改、商用，保留版权声明即可。
+
+PlantFlow 构建于众多优秀开源项目之上。我们对以下第三方技术与组件致以谢意，并严格按其上游许可证分发、保留版权声明：
+
+### 后端 / 运行
+
+| 技术 | 官方站点 | 许可证 |
+|------|----------|--------|
+| Express | https://expressjs.com/ | MIT |
+| TypeScript | https://www.typescriptlang.org/ | Apache-2.0 |
+| pg（node-postgres） | https://node-postgres.com/ | MIT |
+| mysql2 | https://github.com/sidorares/node-mysql2 | MIT |
+| redis（node-redis 客户端） | https://redis.io/ | MIT |
+| multer | https://github.com/expressjs/multer | MIT |
+| node-cron | https://github.com/node-cron/node-cron | ISC |
+| nodemailer | https://nodemailer.com/ | MIT |
+| cors | https://github.com/expressjs/cors | MIT |
+| dotenv | https://github.com/motdotla/dotenv | BSD-2-Clause |
+| bcryptjs | https://github.com/dcodeIO/bcryptjs | MIT |
+| AWS SDK for JavaScript | https://aws.amazon.com/sdk-for-javascript/ | Apache-2.0 |
+
+### 文档解析
+
+| 技术 | 官方站点 | 许可证 |
+|------|----------|--------|
+| mammoth（Word → HTML） | https://github.com/mwilliamson/mammoth.js | BSD-2-Clause |
+| pdf-parse（PDF 文本） | https://www.npmjs.com/package/pdf-parse | MIT |
+| xlsx（SheetJS） | https://github.com/SheetJS/sheetjs | Apache-2.0 |
+
+### 前端
+
+| 技术 | 官方站点 | 许可证 |
+|------|----------|--------|
+| React | https://react.dev/ | MIT |
+| React Flow（@xyflow/react） | https://reactflow.dev/ | MIT |
+| React Router | https://reactrouter.com/ | MIT |
+| Zustand | https://zustand.docs.pmnd.rs/ | MIT |
+| Tailwind CSS | https://tailwindcss.com/ | MIT |
+| Vite | https://vitejs.dev/ | MIT |
+| lucide-react | https://lucide.dev/ | ISC |
+| clsx | https://github.com/lukeed/clsx | MIT |
+| tailwind-merge | https://github.com/dcastil/tailwind-merge | MIT |
+
+### 数据 / 部署
+
+| 技术 | 官方站点 | 许可证 |
+|------|----------|--------|
+| PostgreSQL | https://www.postgresql.org/ | PostgreSQL License |
+| pgvector | https://github.com/pgvector/pgvector | PostgreSQL License |
+| MySQL | https://www.mysql.com/ | GPLv2 / 商用 |
+| Redis | https://redis.io/ | BSD-3-Clause |
+| Docker / Moby | https://www.docker.com/ | Apache-2.0 |
+| Nginx | https://nginx.org/ | BSD-2-Clause |
+
+> 完整、逐条目的第三方依赖清单与许可证信息，请参阅 [LICENSE](LICENSE) 及各上游项目仓库。
