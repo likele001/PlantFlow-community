@@ -63,14 +63,52 @@ CREATE DATABASE api OWNER api;
 
 首次启动会自动执行迁移并创建演示数据。
 
-### 3. Docker 部署（推荐）
+### 3. Docker 部署
+
+#### 一键部署（内置 PostgreSQL + Redis，推荐）
+
+```bash
+# 1) 生成部署环境变量，然后编辑 .env.fullstack 必填 POSTGRES_PASSWORD、LLM_MASTER_KEY
+cp .env.fullstack.example .env.fullstack
+#    LLM_MASTER_KEY 生成：openssl rand -hex 32
+
+# 2) 一键构建并启动（应用 + PostgreSQL(pgvector) + Redis）
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack up -d --build
+```
+
+- 首次启动自动执行数据库迁移并创建演示数据。
+- 访问：`http://127.0.0.1:5000`（或你反向代理的域名，见下 §3.1）。
+
+| 服务 | 默认对外端口（可在 `.env.fullstack` 覆盖） |
+|---|---|
+| 应用 | `FS_APP_PORT=5000` |
+| PostgreSQL（内置 pgvector，知识库向量检索开箱可用） | `FS_POSTGRES_PORT=5544` |
+| Redis | `FS_REDIS_PORT=6383` |
+
+常用命令：
+
+```bash
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack ps          # 查看状态
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack logs -f app # 查看日志
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack down        # 停止
+```
+
+> 若 `POSTGRES_PASSWORD` 或 `LLM_MASTER_KEY` 未填写，上面命令会直接报错提示，属正常保护行为，填入即可。
+
+**无外网 / 内网离线部署**：在可联网机器上构建后导出镜像，目标机导入即可，无需再联网拉取：
+
+```bash
+bash docker/fullstack/export-fullstack.sh          # 自动导出全部镜像到 tar.gz
+docker load < plantflow-fullstack_*.tar.gz         # 目标机导入
+docker compose -f docker-compose.fullstack.yml --env-file .env.fullstack up -d
+```
+
+> 传统方式（应用连接你自建的宿主 PostgreSQL / Redis，需先按 §2 建库，并令 `.env` 中 `DATABASE_URL` / `REDIS_URL` 用 `host.docker.internal` 指向宿主机服务）：
 
 ```bash
 docker compose build
 docker compose up -d
 ```
-
-访问：`http://127.0.0.1:5000`（或你反向代理的域名）
 
 ### 3.1 反向代理（Nginx / 宝塔）
 
