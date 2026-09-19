@@ -50,3 +50,6 @@ coverage
 .nyc_output
 scripts_ops/
 *.bak
+
+# fullstack 部署环境变量（勿提交）
+.env.fullstack

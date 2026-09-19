@@ -1,6 +1,6 @@
 -- 淘宝渠道配置表
 CREATE TABLE IF NOT EXISTS taobao_channel_configs (
-  tenant_id TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
+  tenant_id UUID PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
   app_key TEXT NOT NULL,
   app_secret TEXT NOT NULL,
   session TEXT NOT NULL DEFAULT '',
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS taobao_channel_configs (
 
 -- 确保 channel_configs 表存在（兼容旧表）
 CREATE TABLE IF NOT EXISTS channel_configs (
-  tenant_id TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
+  tenant_id UUID PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
   wecom JSONB,
   feishu JSONB,
   taobao JSONB,

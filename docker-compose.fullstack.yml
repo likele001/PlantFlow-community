@@ -1,0 +1,81 @@
+# PlantFlow 社区版 · 全栈容器化一条命令部署（内置 PostgreSQL + Redis，开箱即用）
+#
+# 用法（在仓库根目录）：
+#   docker compose -f docker-compose.fullstack.yml \
+#     --project-name plantflow-fullstack \
+#     --env-file .env.fullstack up -d --build
+#
+#   首次启动会自动执行数据库迁移并创建演示账号（见 README 默认演示账号）。
+#
+# 与现有 dev（docker-compose.yml，依赖宿主机 DB/Redis）完全隔离：
+#   - 容器、卷、网络全部使用固定 plantflow-fullstack / pflfs-* 命名
+#   - 独立对外端口（见下，可用 .env.fullstack 覆盖）
+#
+# 端口速览（默认，均可 .env.fullstack 覆盖）：
+#   应用 5000 · PostgreSQL 5544 · Redis 6383
+
+name: plantflow-fullstack
+
+services:
+  postgres:
+    # 带 pgvector 扩展：知识库向量检索开箱可用；兼容普通 PostgreSQL 16
+    image: pgvector/pgvector:pg16
+    container_name: pflfs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-plantflow}
+      POSTGRES_USER: ${POSTGRES_USER:-plantflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.fullstack}
+    ports:
+      - "${FS_POSTGRES_PORT:-5544}:5432"
+    volumes:
+      - pflfs-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-plantflow} -d ${POSTGRES_DB:-plantflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: pflfs-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${FS_REDIS_PORT:-6383}:6379"
+    volumes:
+      - pflfs-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/fullstack/app.Dockerfile
+    image: plantflow-app:fullstack
+    container_name: pflfs-app
+    restart: unless-stopped
+    env_file: .env.fullstack
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-plantflow}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-plantflow}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      LLM_MASTER_KEY: ${LLM_MASTER_KEY:?set LLM_MASTER_KEY in .env.fullstack}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${FS_APP_PORT:-5000}:5000"
+
+volumes:
+  pflfs-postgres-data:
+    name: pflfs-postgres-data
+  pflfs-redis-data:
+    name: pflfs-redis-data
