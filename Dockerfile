@@ -13,7 +13,7 @@ RUN npx tsc -p api/tsconfig.json
 # ---- web build ----
 FROM deps AS web-build
 COPY . .
-RUN npx vite build
+RUN npx vite build && cp -r docs dist/docs
 
 # ---- runtime ----
 FROM node:22-alpine AS runtime
